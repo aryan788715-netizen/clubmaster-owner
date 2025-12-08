@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClubMaster Pro - Owner Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --primary: #8b5cf6;
+            --primary-dark: #7c3aed;
+            --secondary: #ec4899;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* Maintenance Mode */
+        .maintenance-mode {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .maintenance-mode.active {
+            display: flex;
+        }
+
+        .maintenance-icon {
+            font-size: 120px;
+            margin-bottom: 30px;
+            animation: pulse 2s infinite;
+        }
+
+        .maintenance-title {
+            font-size: 48px;
+            font-weight: 900;
+            margin-bottom: 20px;
+        }
+
+        .maintenance-message {
+            font-size: 20px;
+            max-width: 600px;
+            opacity: 0.9;
+        }
+
+        /* Login */
+        .login-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .login-card {
+            background: white;
+            padding: 50px;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            width: 100%;
+            max-width: 450px;
+            animation: fadeIn 0.6s;
+        }
+
+        .logo {
+            width: 90px;
+            height: 90px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 42px;
+            margin: 0 auto 28px;
+        }
+
+        .login-title {
+            font-size: 34px;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .login-subtitle {
+            text-align: center;
+            color: #64748b;
+            margin-bottom: 36px;
+            font-size: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary { 
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            box-shadow: 0 4px 15px 0 rgba(139, 92, 246, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-secondary { background: #64748b; color: white; }
+        .btn-warning { background: var(--warning); color: white; }
+
+        .demo-accounts {
+            margin-top: 28px;
+            padding: 20px;
+            background: var(--light);
+            border-radius: 14px;
+            font-size: 13px;
+            line-height: 1.8;
+        }
+
+        /* Dashboard */
+        .dashboard {
+            display: none;
+        }
+
+        .dashboard.active {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: white;
+            border-right: 1px solid var(--border);
+            padding: 28px 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+        }
+
+        .sidebar-header {
+            padding: 0 28px 28px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .sidebar-logo-icon {
+            width: 52px;
+            height: 52px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 26px;
+        }
+
+        .sidebar-logo-text h2 {
+            font-size: 22px;
+            font-weight: 900;
+        }
+
+        .sidebar-logo-text p {
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .nav-section {
+            padding: 28px 0;
+        }
+
+        .nav-section-title {
+            padding: 0 28px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #64748b;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .nav-item {
+            padding: 14px 28px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 15px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--primary);
+            transform: scaleY(0);
+            transition: transform 0.3s;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background: rgba(139, 92, 246, 0.08);
+            color: var(--primary);
+        }
+
+        .nav-item.active::before {
+            transform: scaleY(1);
+        }
+
+        .nav-icon {
+            font-size: 22px;
+        }
+
+        .main-content {
+            margin-left: 280px;
+            padding: 36px;
+            width: calc(100% - 280px);
+            min-height: 100vh;
+        }
+
+        .topbar {
+            background: white;
+            padding: 24px 36px;
+            border-radius: 18px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            margin-bottom: 36px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .topbar h1 {
+            font-size: 30px;
+            font-weight: 900;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 10px 18px 10px 10px;
+            background: var(--light);
+            border-radius: 14px;
+        }
+
+        .user-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 18px;
+        }
+
+        .user-info h4 {
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .user-info p {
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 28px;
+            margin-bottom: 36px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 32px;
+            border-radius: 18px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 18px;
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+        }
+
+        .stat-icon.primary { background: rgba(139, 92, 246, 0.1); }
+        .stat-icon.success { background: rgba(16, 185, 129, 0.1); }
+        .stat-icon.warning { background: rgba(245, 158, 11, 0.1); }
+        .stat-icon.danger { background: rgba(239, 68, 68, 0.1); }
+
+        .stat-label {
+            font-size: 14px;
+            color: #64748b;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-size: 38px;
+            font-weight: 900;
+            color: var(--dark);
+        }
+
+        /* Card */
+        .card {
+            background: white;
+            padding: 32px;
+            border-radius: 18px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            margin-bottom: 36px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+            padding-bottom: 24px;
+            border-bottom: 2px solid var(--light);
+        }
+
+        .card-title {
+            font-size: 24px;
+            font-weight: 800;
+        }
+
+        .btn-sm {
+            padding: 12px 24px;
+            font-size: 14px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.3s;
+        }
+
+        .btn-icon {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        thead {
+            background: var(--light);
+        }
+
+        th {
+            text-align: left;
+            padding: 18px;
+            font-weight: 800;
+            font-size: 13px;
+            text-transform: uppercase;
+            color: #64748b;
+            border-bottom: 2px solid var(--border);
+        }
+
+        td {
+            padding: 22px 18px;
+            border-bottom: 1px solid var(--border);
+            font-size: 15px;
+        }
+
+        tr:hover td {
+            background: rgba(139, 92, 246, 0.02);
+        }
+
+        .badge {
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .badge-success { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .badge-warning { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .badge-danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+        .badge-info { background: rgba(59, 130, 246, 0.1); color: var(--info); }
+
+        /* Alert */
+        .alert {
+            padding: 18px 24px;
+            border-radius: 14px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-weight: 600;
+        }
+
+        .alert-success { 
+            background: rgba(16, 185, 129, 0.1); 
+            color: var(--success);
+            border-left: 4px solid var(--success);
+        }
+
+        .alert-error { 
+            background: rgba(239, 68, 68, 0.1); 
+            color: var(--danger);
+            border-left: 4px solid var(--danger);
+        }
+
+        .alert-info { 
+            background: rgba(59, 130, 246, 0.1); 
+            color: var(--info);
+            border-left: 4px solid var(--info);
+        }
+
+        .alert-warning { 
+            background: rgba(245, 158, 11, 0.1); 
+            color: var(--warning);
+            border-left: 4px solid var(--warning);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 100px 24px;
+            color: #64748b;
+        }
+
+        .empty-icon {
+            font-size: 100px;
+            margin-bottom: 24px;
+            opacity: 0.5;
+        }
+
+        .empty-title {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            color: var(--dark);
+        }
+
+        /* Page Content */
+        .page-content {
+            display: none;
+        }
+
+        .page-content.active {
+            display: block;
+        }
+
+        /* Toggle */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 56px;
+            height: 30px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1;
+            transition: 0.4s;
+            border-radius: 30px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+
+        /* Customization */
+        .customization-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 28px;
+        }
+
+        .custom-section {
+            background: var(--light);
+            padding: 24px;
+            border-radius: 14px;
+        }
+
+        .custom-section h3 {
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 18px;
+        }
+
+        .color-picker-group {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+        }
+
+        .color-preview {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            border: 3px solid var(--border);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+                padding: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Maintenance Mode -->
+    <div id="maintenanceMode" class="maintenance-mode">
+        <div class="maintenance-icon">🔧</div>
+        <h1 class="maintenance-title">Under Maintenance</h1>
+        <p class="maintenance-message" id="maintenanceMessage">We're currently performing scheduled maintenance. We'll be back soon!</p>
+    </div>
+
+    <!-- Login Page -->
+    <div id="loginPage" class="login-page">
+        <div class="login-card">
+            <div class="logo">👑</div>
+            <h1 class="login-title">ClubMaster Pro</h1>
+            <p class="login-subtitle">Owner Control Panel</p>
+            <div id="loginAlert"></div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" class="form-input" id="loginEmail" required placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-input" id="loginPassword" required placeholder="Enter your password">
+                </div>
+                <button type="submit" class="btn btn-primary">Sign In</button>
+            </form>
+            <div class="demo-accounts">
+                <strong>Demo Account:</strong><br>
+                <strong>Email:</strong> owner@club.com<br>
+                <strong>Password:</strong> owner123
+            </div>
+        </div>
+    </div>
+
+    <!-- Owner Dashboard -->
+    <div id="ownerDashboard" class="dashboard">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <div class="sidebar-logo-icon">👑</div>
+                    <div class="sidebar-logo-text">
+                        <h2>ClubMaster</h2>
+                        <p>Owner Panel</p>
+                    </div>
+                </div>
+            </div>
+            <nav class="nav-section">
+                <div class="nav-section-title">Main</div>
+                <div class="nav-item active" data-page="dashboard">
+                    <span class="nav-icon">📊</span>
+                    <span>Dashboard</span>
+                </div>
+                <div class="nav-item" data-page="customize">
+                    <span class="nav-icon">🎨</span>
+                    <span>Customize</span>
+                </div>
+                <div class="nav-item" data-page="admins">
+                    <span class="nav-icon">👥</span>
+                    <span>Manage Admins</span>
+                </div>
+                <div class="nav-item" data-page="maintenance">
+                    <span class="nav-icon">🔧</span>
+                    <span>Maintenance Mode</span>
+                </div>
+                <div class="nav-item" data-page="settings">
+                    <span class="nav-icon">⚙️</span>
+                    <span>Settings</span>
+                </div>
+            </nav>
+            <nav class="nav-section">
+                <div class="nav-section-title">Account</div>
+                <div class="nav-item" onclick="logout()">
+                    <span class="nav-icon">🚪</span>
+                    <span>Logout</span>
+                </div>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="topbar">
+                <h1 id="pageTitle">Dashboard</h1>
+                <div class="user-profile">
+                    <div class="user-avatar">O</div>
+                    <div class="user-info">
+                        <h4>Club Owner</h4>
+                        <p>Super Admin</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Page -->
+            <div id="dashboardPage" class="page-content active">
+                <div class="stats-grid" id="ownerStats"></div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">System Overview</h2>
+                    </div>
+                    <div id="systemOverview"></div>
+                </div>
+            </div>
+
+            <!-- Customize Page -->
+            <div id="customizePage" class="page-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Club Customization</h2>
+                    </div>
+                    <form id="customizeForm">
+                        <div class="customization-grid">
+                            <div class="custom-section">
+                                <h3>Basic Information</h3>
+                                <div class="form-group">
+                                    <label class="form-label">Club Name</label>
+                                    <input type="text" class="form-input" id="clubName" value="ClubMaster Pro">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Club Description</label>
+                                    <input type="text" class="form-input" id="clubDescription" value="Premium Events">
+                                </div>
+                            </div>
+                            <div class="custom-section">
+                                <h3>Theme Colors</h3>
+                                <div class="form-group">
+                                    <label class="form-label">Primary Color</label>
+                                    <div class="color-picker-group">
+                                        <input type="color" class="form-input" id="primaryColor" value="#8b5cf6">
+                                        <div class="color-preview" style="background: #8b5cf6"></div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Secondary Color</label>
+                                    <div class="color-picker-group">
+                                        <input type="color" class="form-input" id="secondaryColor" value="#ec4899">
+                                        <div class="color-preview" style="background: #ec4899"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="margin-top: 24px;">Save Changes</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Admins Page -->
+            <div id="adminsPage" class="page-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Manage Admins</h2>
+                        <button class="btn-sm btn-primary btn-icon" onclick="openAddAdminModal()">
+                            <span>➕</span>
+                            <span>Add Admin</span>
+                        </button>
+                    </div>
+                    <div id="adminsList"></div>
+                </div>
+            </div>
+
+            <!-- Maintenance Page -->
+            <div id="maintenancePage" class="page-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Maintenance Mode</h2>
+                    </div>
+                    <div class="alert alert-warning">
+                        <span>⚠️</span>
+                        <div>
+                            <strong>Warning:</strong> Enabling maintenance mode will prevent all users and admins from accessing the system. Only you (owner) can login during maintenance.
+                        </div>
+                    </div>
+                    <form id="maintenanceForm">
+                        <div class="form-group">
+                            <label class="form-label">Enable Maintenance Mode</label>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="maintenanceToggle">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Maintenance Message</label>
+                            <textarea class="form-textarea" id="maintenanceMessageInput">We're currently performing scheduled maintenance. We'll be back soon!</textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Settings</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Settings Page -->
+            <div id="settingsPage" class="page-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Global Settings</h2>
+                    </div>
+                    <form id="settingsForm">
+                        <div class="form-group">
+                            <label class="form-label">Enable Bookings Globally</label>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="bookingsToggle" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="alert alert-info">
+                            <span>ℹ️</span>
+                            <div>
+                                When disabled, users won't be able to book any events. Useful for temporary closures or special situations.
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Settings</button>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Database
+        class OwnerDB {
+            getSettings() {
+                return JSON.parse(localStorage.getItem('clubSettings') || '{"clubName":"ClubMaster Pro","clubDescription":"Premium Events","primaryColor":"#8b5cf6","secondaryColor":"#ec4899","maintenanceMode":false,"maintenanceMessage":"We\'re currently performing scheduled maintenance. We\'ll be back soon!","bookingsEnabled":true}');
+            }
+
+            saveSettings(settings) {
+                localStorage.setItem('clubSettings', JSON.stringify(settings));
+            }
+
+            getEvents() {
+                return JSON.parse(localStorage.getItem('clubEvents') || '[]');
+            }
+
+            getBookings() {
+                return JSON.parse(localStorage.getItem('clubBookings') || '[]');
+            }
+
+            getUsers() {
+                return JSON.parse(localStorage.getItem('clubUsers') || '[]');
+            }
+
+            getAdmins() {
+                return JSON.parse(localStorage.getItem('clubAdmins') || '[{"id":"1","name":"Admin User","email":"admin@club.com","password":"admin123"}]');
+            }
+
+            saveAdmins(admins) {
+                localStorage.setItem('clubAdmins', JSON.stringify(admins));
+            }
+
+            addAdmin(admin) {
+                const admins = this.getAdmins();
+                admin.id = Date.now().toString();
+                admins.push(admin);
+                this.saveAdmins(admins);
+                return admin;
+            }
+
+            deleteAdmin(id) {
+                let admins = this.getAdmins();
+                admins = admins.filter(a => a.id !== id);
+                this.saveAdmins(admins);
+            }
+        }
+
+        const db = new OwnerDB();
+        let currentUser = null;
+
+        // Check maintenance on load
+        window.addEventListener('DOMContentLoaded', () => {
+            const settings = db.getSettings();
+            if (settings.maintenanceMode) {
+                document.getElementById('maintenanceMessage').textContent = settings.maintenanceMessage;
+                document.getElementById('maintenanceMode').classList.add('active');
+            }
+        });
+
+        // Login
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const alert = document.getElementById('loginAlert');
+
+            if (email === 'owner@club.com' && password === 'owner123') {
+                currentUser = { email, role: 'owner', name: 'Club Owner' };
+                alert.innerHTML = '<div class="alert alert-success"><span>✓</span> Login successful!</div>';
+                setTimeout(() => {
+                    document.getElementById('loginPage').style.display = 'none';
+                    document.getElementById('ownerDashboard').classList.add('active');
+                    loadOwnerDashboard();
+                }, 500);
+            } else {
+                alert.innerHTML = '<div class="alert alert-error"><span>✗</span> Invalid credentials</div>';
+            }
+        });
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('ownerDashboard').classList.remove('active');
+            document.getElementById('loginPage').style.display = 'flex';
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginPassword').value = '';
+        }
+
+        // Load Dashboard
+        function loadOwnerDashboard() {
+            const settings = db.getSettings();
+            const events = db.getEvents();
+            const bookings = db.getBookings();
+            const users = db.getUsers();
+            const admins = db.getAdmins();
+
+            const totalRevenue = bookings.reduce((sum, b) => {
+                const event = events.find(e => e.id === b.eventId);
+                return sum + (event ? event.price * b.guests : 0);
+            }, 0);
+
+            document.getElementById('ownerStats').innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-label">Total Events</div>
+                            <div class="stat-value">${events.length}</div>
+                        </div>
+                        <div class="stat-icon primary">🎉</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-label">Total Bookings</div>
+                            <div class="stat-value">${bookings.length}</div>
+                        </div>
+                        <div class="stat-icon success">📅</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-label">Total Revenue</div>
+                            <div class="stat-value">₹${(totalRevenue/1000).toFixed(1)}K</div>
+                        </div>
+                        <div class="stat-icon warning">💰</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-label">Total Users</div>
+                            <div class="stat-value">${users.length}</div>
+                        </div>
+                        <div class="stat-icon danger">👥</div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('systemOverview').innerHTML = `
+                <div class="alert alert-info">
+                    <span>ℹ️</span>
+                    <div>
+                        <strong>System Status:</strong> All systems operational<br>
+                        <strong>Admins:</strong> ${admins.length} active<br>
+                        <strong>Bookings:</strong> ${settings.bookingsEnabled ? 'Enabled' : 'Disabled'}<br>
+                        <strong>Maintenance:</strong> ${settings.maintenanceMode ? 'Active' : 'Inactive'}
+                    </div>
+                </div>
+            `;
+
+            // Load settings
+            document.getElementById('clubName').value = settings.clubName;
+            document.getElementById('clubDescription').value = settings.clubDescription;
+            document.getElementById('primaryColor').value = settings.primaryColor;
+            document.getElementById('secondaryColor').value = settings.secondaryColor;
+            document.getElementById('maintenanceToggle').checked = settings.maintenanceMode;
+            document.getElementById('maintenanceMessageInput').value = settings.maintenanceMessage;
+            document.getElementById('bookingsToggle').checked = settings.bookingsEnabled;
+
+            renderAdmins();
+        }
+
+        function renderAdmins() {
+            const admins = db.getAdmins();
+            const container = document.getElementById('adminsList');
+
+            if (admins.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div><div class="empty-title">No Admins</div></div>';
+                return;
+            }
+
+            container.innerHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${admins.map(a => `
+                            <tr>
+                                <td><strong>${a.name}</strong></td>
+                                <td>${a.email}</td>
+                                <td>
+                                    <button class="btn-sm btn-danger" onclick="deleteAdmin('${a.id}')">Delete</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // Add Admin Modal
+        function openAddAdminModal() {
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.style.display = 'flex';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Add New Admin</h3>
+                        <p class="modal-subtitle">Create a new admin account</p>
+                    </div>
+                    <form id="addAdminForm">
+                        <div class="form-group">
+                            <label class="form-label">Name</label>
+                            <input type="text" class="form-input" id="adminName" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-input" id="adminEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Password</label>
+                            <input type="password" class="form-input" id="adminPassword" required>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Add Admin</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            document.getElementById('addAdminForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                db.addAdmin({
+                    name: document.getElementById('adminName').value,
+                    email: document.getElementById('adminEmail').value,
+                    password: document.getElementById('adminPassword').value
+                });
+                modal.remove();
+                renderAdmins();
+            });
+        }
+
+        function deleteAdmin(id) {
+            if (confirm('Delete this admin?')) {
+                db.deleteAdmin(id);
+                renderAdmins();
+            }
+        }
+
+        // Forms
+        document.getElementById('customizeForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const settings = db.getSettings();
+            settings.clubName = document.getElementById('clubName').value;
+            settings.clubDescription = document.getElementById('clubDescription').value;
+            settings.primaryColor = document.getElementById('primaryColor').value;
+            settings.secondaryColor = document.getElementById('secondaryColor').value;
+            db.saveSettings(settings);
+            alert('Settings saved successfully!');
+        });
+
+        document.getElementById('maintenanceForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const settings = db.getSettings();
+            settings.maintenanceMode = document.getElementById('maintenanceToggle').checked;
+            settings.maintenanceMessage = document.getElementById('maintenanceMessageInput').value;
+            db.saveSettings(settings);
+
+            if (settings.maintenanceMode) {
+                document.getElementById('maintenanceMessage').textContent = settings.maintenanceMessage;
+                document.getElementById('maintenanceMode').classList.add('active');
+            } else {
+                document.getElementById('maintenanceMode').classList.remove('active');
+            }
+
+            alert('Maintenance settings saved!');
+            loadOwnerDashboard();
+        });
+
+        document.getElementById('settingsForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const settings = db.getSettings();
+            settings.bookingsEnabled = document.getElementById('bookingsToggle').checked;
+            db.saveSettings(settings);
+            alert('Settings saved successfully!');
+            loadOwnerDashboard();
+        });
+
+        // Navigation
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const page = this.getAttribute('data-page');
+                if (!page) return;
+
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+
+                document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
+                document.getElementById(page + 'Page').classList.add('active');
+
+                const titles = {
+                    'dashboard': 'Dashboard',
+                    'customize': 'Customize Club',
+                    'admins': 'Manage Admins',
+                    'maintenance': 'Maintenance Mode',
+                    'settings': 'Global Settings'
+                };
+
+                document.getElementById('pageTitle').textContent = titles[page] || 'Dashboard';
+            });
+        });
+    </script>
+</body>
+</html>
