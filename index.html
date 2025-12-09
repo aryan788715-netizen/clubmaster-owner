@@ -404,6 +404,17 @@
             border-bottom: 1px solid #e2e8f0;
         }
 
+        .badge {
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .badge-success { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+        .badge-info { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+
         .page-content {
             display: none;
         }
@@ -517,12 +528,31 @@
                     <span class="nav-icon">📊</span>
                     <span>Dashboard</span>
                 </div>
+                <div class="nav-item" onclick="showPage('events')">
+                    <span class="nav-icon">🎉</span>
+                    <span>Events</span>
+                </div>
+                <div class="nav-item" onclick="showPage('bookings')">
+                    <span class="nav-icon">📅</span>
+                    <span>Bookings</span>
+                </div>
+                <div class="nav-item" onclick="showPage('users')">
+                    <span class="nav-icon">👥</span>
+                    <span>Users</span>
+                </div>
+                <div class="nav-item" onclick="showPage('notifications')">
+                    <span class="nav-icon">📢</span>
+                    <span>Notifications</span>
+                </div>
+            </nav>
+            <nav class="nav-section">
+                <div class="nav-section-title">Owner Controls</div>
                 <div class="nav-item" onclick="showPage('customize')">
                     <span class="nav-icon">🎨</span>
                     <span>Customize</span>
                 </div>
                 <div class="nav-item" onclick="showPage('admins')">
-                    <span class="nav-icon">👥</span>
+                    <span class="nav-icon">👨‍💼</span>
                     <span>Admins</span>
                 </div>
                 <div class="nav-item" onclick="showPage('maintenance')">
@@ -551,6 +581,7 @@
                 </div>
             </div>
 
+            <!-- Dashboard -->
             <div id="dashboardPage" class="page-content active">
                 <div class="stats-grid" id="stats"></div>
                 <div class="card">
@@ -561,6 +592,61 @@
                 </div>
             </div>
 
+            <!-- Events (Full Admin Power) -->
+            <div id="eventsPage" class="page-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Manage Events</h2>
+                        <button class="btn-sm btn-primary btn-icon" onclick="addEvent()">
+                            <span>➕</span>
+                            <span>Add Event</span>
+                        </button>
+                    </div>
+                    <div id="eventsList"></div>
+                </div>
+            </div>
+
+            <!-- Bookings -->
+            <div id="bookingsPage" class="page-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">All Bookings</h2>
+                    </div>
+                    <div id="allBookings"></div>
+                </div>
+            </div>
+
+            <!-- Users -->
+            <div id="usersPage" class="page-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Users</h2>
+                    </div>
+                    <div id="usersList"></div>
+                </div>
+            </div>
+
+            <!-- Notifications -->
+            <div id="notificationsPage" class="page-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Send Notification</h2>
+                    </div>
+                    <form id="notifForm">
+                        <div class="form-group">
+                            <label class="form-label">Title</label>
+                            <input type="text" class="form-input" id="notifTitle" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Message</label>
+                            <textarea class="form-textarea" id="notifMessage" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Send to All Users</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Customize -->
             <div id="customizePage" class="page-content">
                 <div class="card">
                     <div class="card-header">
@@ -580,6 +666,7 @@
                 </div>
             </div>
 
+            <!-- Admins -->
             <div id="adminsPage" class="page-content">
                 <div class="card">
                     <div class="card-header">
@@ -593,6 +680,7 @@
                 </div>
             </div>
 
+            <!-- Maintenance -->
             <div id="maintenancePage" class="page-content">
                 <div class="card">
                     <div class="card-header">
@@ -601,7 +689,7 @@
                     <div class="alert alert-warning">
                         <span>⚠️</span>
                         <div>
-                            <strong>Warning:</strong> Enabling maintenance mode will prevent all users and admins from accessing the system.
+                            <strong>Warning:</strong> Enabling maintenance mode will shut down the system for all users and admins. Only you (owner) will have access.
                         </div>
                     </div>
                     <form id="maintenanceForm">
@@ -625,10 +713,9 @@
 
     <script>
         const db = {
-            get: (key) => JSON.parse(localStorage.getItem(key) || '{}'),
+            get: (key) => JSON.parse(localStorage.getItem(key) || '[]'),
             set: (key, val) => localStorage.setItem(key, JSON.stringify(val)),
-            getArr: (key) => JSON.parse(localStorage.getItem(key) || '[]'),
-            setArr: (key, val) => localStorage.setItem(key, JSON.stringify(val))
+            getObj: (key) => JSON.parse(localStorage.getItem(key) || '{}')
         };
 
         document.getElementById('loginForm').addEventListener('submit', (e) => {
@@ -657,10 +744,10 @@
         }
 
         function loadDashboard() {
-            const events = db.getArr('clubEvents');
-            const bookings = db.getArr('clubBookings');
-            const users = db.getArr('clubUsers');
-            const admins = db.getArr('clubAdmins');
+            const events = db.get('clubEvents');
+            const bookings = db.get('clubBookings');
+            const users = db.get('clubUsers');
+            const admins = db.get('clubAdmins');
             
             const revenue = bookings.reduce((sum, b) => {
                 const event = events.find(e => e.id === b.eventId);
@@ -706,14 +793,15 @@
                 </div>
             `;
 
-            const settings = db.get('clubSettings');
+            const settings = db.getObj('clubSettings');
             document.getElementById('overview').innerHTML = `
                 <div class="alert alert-info">
                     <span>ℹ️</span>
                     <div>
-                        <strong>System Status:</strong> All systems operational<br>
+                        <strong>System Status:</strong> ${settings.maintenanceMode ? '🔧 MAINTENANCE MODE ACTIVE' : '✅ All systems operational'}<br>
                         <strong>Admins:</strong> ${admins.length} active<br>
-                        <strong>Maintenance:</strong> ${settings.maintenanceMode ? 'Active' : 'Inactive'}
+                        <strong>Total Users:</strong> ${users.length}<br>
+                        <strong>Total Events:</strong> ${events.length}
                     </div>
                 </div>
             `;
@@ -723,11 +811,125 @@
             document.getElementById('maintenanceToggle').checked = settings.maintenanceMode || false;
             document.getElementById('maintenanceMsg').value = settings.maintenanceMessage || "We're currently performing scheduled maintenance. We'll be back soon!";
 
+            renderEvents();
+            renderBookings();
+            renderUsers();
             renderAdmins();
         }
 
+        function renderEvents() {
+            const events = db.get('clubEvents');
+            
+            if (events.length === 0) {
+                document.getElementById('eventsList').innerHTML = '<div class="empty-state"><div class="empty-icon">🎉</div><div class="empty-title">No Events</div></div>';
+                return;
+            }
+
+            document.getElementById('eventsList').innerHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Event</th>
+                            <th>Date</th>
+                            <th>Price</th>
+                            <th>Capacity</th>
+                            <th>Booked</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${events.map(e => `
+                            <tr>
+                                <td><strong>${e.title}</strong></td>
+                                <td>${new Date(e.date).toLocaleDateString()}</td>
+                                <td>₹${e.price.toLocaleString()}</td>
+                                <td>${e.capacity}</td>
+                                <td><span class="badge badge-info">${e.booked || 0}/${e.capacity}</span></td>
+                                <td>
+                                    <button class="btn-sm btn-danger" onclick="deleteEvent('${e.id}')">Delete</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function renderBookings() {
+            const bookings = db.get('clubBookings');
+            const events = db.get('clubEvents');
+            const users = db.get('clubUsers');
+            
+            if (bookings.length === 0) {
+                document.getElementById('allBookings').innerHTML = '<div class="empty-state"><div class="empty-icon">📅</div><div class="empty-title">No Bookings</div></div>';
+                return;
+            }
+
+            document.getElementById('allBookings').innerHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>User</th>
+                            <th>Event</th>
+                            <th>Guests</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${bookings.map(b => {
+                            const event = events.find(e => e.id === b.eventId);
+                            const user = users.find(u => u.id === b.userId);
+                            return `
+                                <tr>
+                                    <td><strong>#${b.id.slice(-6)}</strong></td>
+                                    <td>${user?.name || 'Unknown'}</td>
+                                    <td>${event?.title || 'Unknown'}</td>
+                                    <td>${b.guests}</td>
+                                    <td><strong>₹${b.totalAmount.toLocaleString()}</strong></td>
+                                    <td><span class="badge badge-success">CONFIRMED</span></td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function renderUsers() {
+            const users = db.get('clubUsers');
+            const bookings = db.get('clubBookings');
+            
+            document.getElementById('usersList').innerHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Bookings</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${users.map(u => {
+                            const count = bookings.filter(b => b.userId === u.id).length;
+                            return `
+                                <tr>
+                                    <td><strong>${u.name}</strong></td>
+                                    <td>${u.email}</td>
+                                    <td>${u.phone || 'N/A'}</td>
+                                    <td><span class="badge badge-info">${count}</span></td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
         function renderAdmins() {
-            const admins = db.getArr('clubAdmins');
+            const admins = db.get('clubAdmins');
             
             if (admins.length === 0) {
                 document.getElementById('adminsList').innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div><div class="empty-title">No Admins</div></div>';
@@ -758,46 +960,91 @@
             `;
         }
 
+        function addEvent() {
+            const title = prompt('Event Title:');
+            if (!title) return;
+            
+            const description = prompt('Description:');
+            const date = prompt('Date (YYYY-MM-DD):');
+            const time = prompt('Time (HH:MM):');
+            const price = parseFloat(prompt('Price:'));
+            const capacity = parseInt(prompt('Capacity:'));
+            const venue = prompt('Venue:');
+            
+            const events = db.get('clubEvents');
+            events.push({
+                id: Date.now().toString(),
+                title, description, date, time, price, capacity, venue,
+                image: '🎉',
+                booked: 0
+            });
+            db.set('clubEvents', events);
+            loadDashboard();
+        }
+
+        function deleteEvent(id) {
+            if (confirm('Delete this event?')) {
+                const events = db.get('clubEvents').filter(e => e.id !== id);
+                db.set('clubEvents', events);
+                loadDashboard();
+            }
+        }
+
         function addAdmin() {
             const name = prompt('Admin Name:');
             if (!name) return;
             const email = prompt('Admin Email:');
             const password = prompt('Admin Password:');
             
-            const admins = db.getArr('clubAdmins');
+            const admins = db.get('clubAdmins');
             admins.push({
                 id: Date.now().toString(),
                 name, email, password
             });
-            db.setArr('clubAdmins', admins);
+            db.set('clubAdmins', admins);
             renderAdmins();
         }
 
         function deleteAdmin(id) {
             if (confirm('Delete this admin?')) {
-                const admins = db.getArr('clubAdmins').filter(a => a.id !== id);
-                db.setArr('clubAdmins', admins);
+                const admins = db.get('clubAdmins').filter(a => a.id !== id);
+                db.set('clubAdmins', admins);
                 renderAdmins();
             }
         }
 
         document.getElementById('customizeForm').addEventListener('submit', (e) => {
             e.preventDefault();
-            const settings = db.get('clubSettings');
+            const settings = db.getObj('clubSettings');
             settings.clubName = document.getElementById('clubName').value;
             settings.clubDescription = document.getElementById('clubDesc').value;
-            db.set('clubSettings', settings);
+            localStorage.setItem('clubSettings', JSON.stringify(settings));
             alert('Settings saved!');
         });
 
         document.getElementById('maintenanceForm').addEventListener('submit', (e) => {
             e.preventDefault();
-            const settings = db.get('clubSettings');
+            const settings = db.getObj('clubSettings');
             settings.maintenanceMode = document.getElementById('maintenanceToggle').checked;
             settings.maintenanceMessage = document.getElementById('maintenanceMsg').value;
-            db.set('clubSettings', settings);
-            alert('Maintenance settings saved!');
+            localStorage.setItem('clubSettings', JSON.stringify(settings));
+            alert('Maintenance settings saved! ' + (settings.maintenanceMode ? 'System is now in maintenance mode.' : 'Maintenance mode disabled.'));
             loadDashboard();
+        });
+
+        document.getElementById('notifForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const notifs = db.get('clubNotifications');
+            notifs.push({
+                id: Date.now().toString(),
+                title: document.getElementById('notifTitle').value,
+                message: document.getElementById('notifMessage').value,
+                date: new Date().toISOString(),
+                read: false
+            });
+            db.set('clubNotifications', notifs);
+            alert('Notification sent to all users!');
+            document.getElementById('notifForm').reset();
         });
 
         function showPage(page) {
@@ -809,6 +1056,10 @@
             
             const titles = {
                 dashboard: 'Dashboard',
+                events: 'Manage Events',
+                bookings: 'All Bookings',
+                users: 'Registered Users',
+                notifications: 'Send Notification',
                 customize: 'Customize Club',
                 admins: 'Manage Admins',
                 maintenance: 'Maintenance Mode'
