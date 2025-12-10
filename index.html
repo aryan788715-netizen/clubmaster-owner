@@ -485,6 +485,46 @@
             font-weight: 800;
             margin-bottom: 12px;
         }
+
+        .color-picker-group {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+        }
+
+        .color-preview {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            border: 3px solid #e2e8f0;
+        }
+
+        .theme-preview {
+            background: white;
+            padding: 30px;
+            border-radius: 18px;
+            margin-top: 24px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .theme-preview-header {
+            padding: 30px;
+            border-radius: 14px;
+            color: white;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .theme-preview-title {
+            font-size: 28px;
+            font-weight: 900;
+            margin-bottom: 8px;
+        }
+
+        .theme-preview-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
     </style>
 </head>
 <body>
@@ -549,7 +589,7 @@
                 <div class="nav-section-title">Owner Controls</div>
                 <div class="nav-item" onclick="showPage('customize')">
                     <span class="nav-icon">🎨</span>
-                    <span>Customize</span>
+                    <span>Customize Theme</span>
                 </div>
                 <div class="nav-item" onclick="showPage('admins')">
                     <span class="nav-icon">👨‍💼</span>
@@ -592,7 +632,7 @@
                 </div>
             </div>
 
-            <!-- Events (Full Admin Power) -->
+            <!-- Events -->
             <div id="eventsPage" class="page-content">
                 <div class="card">
                     <div class="card-header">
@@ -646,22 +686,50 @@
                 </div>
             </div>
 
-            <!-- Customize -->
+            <!-- Customize Theme -->
             <div id="customizePage" class="page-content">
                 <div class="card">
                     <div class="card-header">
-                        <h2 class="card-title">Customize Club</h2>
+                        <h2 class="card-title">🎨 Customize User Interface</h2>
                     </div>
                     <form id="customizeForm">
                         <div class="form-group">
                             <label class="form-label">Club Name</label>
-                            <input type="text" class="form-input" id="clubName">
+                            <input type="text" class="form-input" id="clubName" placeholder="ClubMaster Pro">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Description</label>
-                            <input type="text" class="form-input" id="clubDesc">
+                            <label class="form-label">Club Description</label>
+                            <input type="text" class="form-input" id="clubDesc" placeholder="Your Premium Event Experience">
                         </div>
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <div class="form-group">
+                            <label class="form-label">Primary Color (Gradient Start)</label>
+                            <div class="color-picker-group">
+                                <input type="color" class="form-input" id="primaryColor" value="#8b5cf6" onchange="updatePreview()">
+                                <div class="color-preview" id="primaryPreview" style="background: #8b5cf6"></div>
+                                <span id="primaryHex">#8b5cf6</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Secondary Color (Gradient End)</label>
+                            <div class="color-picker-group">
+                                <input type="color" class="form-input" id="secondaryColor" value="#ec4899" onchange="updatePreview()">
+                                <div class="color-preview" id="secondaryPreview" style="background: #ec4899"></div>
+                                <span id="secondaryHex">#ec4899</span>
+                            </div>
+                        </div>
+
+                        <div class="theme-preview">
+                            <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 20px;">Live Preview</h3>
+                            <div class="theme-preview-header" id="previewHeader">
+                                <div class="theme-preview-title" id="previewName">ClubMaster Pro</div>
+                                <div class="theme-preview-subtitle" id="previewDesc">Your Premium Event Experience</div>
+                            </div>
+                            <div style="text-align: center; color: #64748b;">
+                                This is how your users will see the interface
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" style="margin-top: 24px;">Save Theme</button>
                     </form>
                 </div>
             </div>
@@ -806,16 +874,49 @@
                 </div>
             `;
 
+            // Load theme settings
             document.getElementById('clubName').value = settings.clubName || 'ClubMaster Pro';
-            document.getElementById('clubDesc').value = settings.clubDescription || 'Premium Events';
+            document.getElementById('clubDesc').value = settings.clubDescription || 'Your Premium Event Experience';
+            document.getElementById('primaryColor').value = settings.primaryColor || '#8b5cf6';
+            document.getElementById('secondaryColor').value = settings.secondaryColor || '#ec4899';
             document.getElementById('maintenanceToggle').checked = settings.maintenanceMode || false;
             document.getElementById('maintenanceMsg').value = settings.maintenanceMessage || "We're currently performing scheduled maintenance. We'll be back soon!";
 
+            updatePreview();
             renderEvents();
             renderBookings();
             renderUsers();
             renderAdmins();
         }
+
+        function updatePreview() {
+            const clubName = document.getElementById('clubName').value || 'ClubMaster Pro';
+            const clubDesc = document.getElementById('clubDesc').value || 'Your Premium Event Experience';
+            const primary = document.getElementById('primaryColor').value;
+            const secondary = document.getElementById('secondaryColor').value;
+
+            document.getElementById('previewName').textContent = clubName;
+            document.getElementById('previewDesc').textContent = clubDesc;
+            document.getElementById('previewHeader').style.background = `linear-gradient(135deg, ${primary} 0%, ${secondary} 100%)`;
+            document.getElementById('primaryPreview').style.background = primary;
+            document.getElementById('secondaryPreview').style.background = secondary;
+            document.getElementById('primaryHex').textContent = primary;
+            document.getElementById('secondaryHex').textContent = secondary;
+        }
+
+        document.getElementById('clubName').addEventListener('input', updatePreview);
+        document.getElementById('clubDesc').addEventListener('input', updatePreview);
+
+        document.getElementById('customizeForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const settings = db.getObj('clubSettings');
+            settings.clubName = document.getElementById('clubName').value;
+            settings.clubDescription = document.getElementById('clubDesc').value;
+            settings.primaryColor = document.getElementById('primaryColor').value;
+            settings.secondaryColor = document.getElementById('secondaryColor').value;
+            localStorage.setItem('clubSettings', JSON.stringify(settings));
+            alert('✅ Theme saved! Users will see the new design.');
+        });
 
         function renderEvents() {
             const events = db.get('clubEvents');
@@ -917,7 +1018,7 @@
                             return `
                                 <tr>
                                     <td><strong>${u.name}</strong></td>
-                                    <td>${u.email}</td>
+                                    <td>${u.email || 'N/A'}</td>
                                     <td>${u.phone || 'N/A'}</td>
                                     <td><span class="badge badge-info">${count}</span></td>
                                 </tr>
@@ -1013,15 +1114,6 @@
             }
         }
 
-        document.getElementById('customizeForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const settings = db.getObj('clubSettings');
-            settings.clubName = document.getElementById('clubName').value;
-            settings.clubDescription = document.getElementById('clubDesc').value;
-            localStorage.setItem('clubSettings', JSON.stringify(settings));
-            alert('Settings saved!');
-        });
-
         document.getElementById('maintenanceForm').addEventListener('submit', (e) => {
             e.preventDefault();
             const settings = db.getObj('clubSettings');
@@ -1060,7 +1152,7 @@
                 bookings: 'All Bookings',
                 users: 'Registered Users',
                 notifications: 'Send Notification',
-                customize: 'Customize Club',
+                customize: 'Customize Theme',
                 admins: 'Manage Admins',
                 maintenance: 'Maintenance Mode'
             };
